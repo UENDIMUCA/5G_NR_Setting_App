@@ -11,6 +11,12 @@ def fetch_osm_data(query):
     response = requests.get(overpass_url, params={'data': query})
     return response.json() if response.status_code == 200 else None
 
+def get_speed_limit(value):
+    try:
+        return int(value)
+    except ValueError:
+        return 50  # Default speed if conversion fails (e.g., 'walk')
+
 def determine_5g_config(avg_speed, population_density):
     if avg_speed > 70:
         return {"subcarrier": "120 kHz", "band": "mmWave (24GHz+)", "cyclic_prefix": "Normal"}
@@ -41,15 +47,22 @@ def get_5g_config():
     """
     road_data = fetch_osm_data(road_query)
     
-    avg_speed = sum([int(way["tags"].get("maxspeed", "50")) for way in road_data["elements"] if "tags" in way and "maxspeed" in way["tags"]]) / len(road_data["elements"]) if road_data else 50
+    if road_data and "elements" in road_data:
+        speed_values = [
+            get_speed_limit(way["tags"].get("maxspeed", "50"))
+            for way in road_data["elements"]
+            if "tags" in way and "maxspeed" in way["tags"]
+        ]
+        avg_speed = sum(speed_values) / len(speed_values) if speed_values else 50
+    else:
+        avg_speed = 50  # Default if no road data found
     
     # Mocked Population Density API (replace with real API)
     population_density = 3000
     
     config = determine_5g_config(avg_speed, population_density)
     
-    return jsonify({"lat": lat, "lon": lon, "config": config})
+    return jsonify({"lat": lat, "lon": lon, "avg_speed": avg_speed, "config": config})
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
-
