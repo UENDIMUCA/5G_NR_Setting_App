@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>5G NR Configuration Map</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <style>
+        #map { height: 500px; }
+    </style>
+</head>
+<body>
+    <h2>5G NR Setting Application</h2>
+    <p>Click on the map to get 5G NR recommendations.</p>
+    <div id="map"></div>
+    <div id="result"></div>
+
+    <script>
+        var map = L.map('map').setView([48.8566, 2.3522], 12);  // Default: Paris
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+
+        function get5GConfig(lat, lon) {
+            fetch(`/api/5g_config?lat=${lat}&lon=${lon}`)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('result').innerHTML = `
+                        <h3>5G NR Configuration</h3>
+                        <p><b>Subcarrier Spacing:</b> ${data.config.subcarrier}</p>
+                        <p><b>Frequency Band:</b> ${data.config.band}</p>
+                        <p><b>Cyclic Prefix Mode:</b> ${data.config.cyclic_prefix}</p>
+                    `;
+                });
+        }
+
+        map.on('click', function(e) {
+            var lat = e.latlng.lat;
+            var lon = e.latlng.lng;
+            get5GConfig(lat, lon);
+        });
+    </script>
+</body>
+</html>

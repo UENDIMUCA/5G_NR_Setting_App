@@ -13,5 +13,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy the rest of the project files
 COPY . .
 
-# Command to run the script
-CMD ["python", "src/extract_map.py"]
+# Expose Flask port
+EXPOSE 5000
+
+# Run both extract_map.py (for data) and app.py (Flask)
+CMD ["bash", "-c", "python src/extract_map.py && python src/app.py"]
