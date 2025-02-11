@@ -84,12 +84,14 @@ def determine_5g_config(avg_speed, population_density, avg_floors, building_coun
     cyclic_prefix = "Normal" if area_type in ["Big Capital", "Urban"] else "Extended"
 
     # Adjust subcarrier spacing based on area type
-    if avg_speed < 50:
+    if avg_speed <= 45:
         subcarrier = "15 kHz"
-    elif 50 < avg_speed > 70:
+    elif 45 < avg_speed > 70:
         subcarrier = "30 kHz"
     elif avg_speed > 70:
         subcarrier = "120 kHz"
+    else:
+        subcarrier = "30 kHz"  # Default value 
 
     return {
         "subcarrier": subcarrier,
