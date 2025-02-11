@@ -40,25 +40,32 @@ def estimate_population_density(building_count, avg_floors, radius=5000, occupan
     return estimated_population / area_km2 if area_km2 > 0 else 0
 
 def determine_5g_config(avg_speed, population_density, avg_floors, building_count):
-    """Determines the 5G configuration based on speed, density, and building data."""
-    
-    high_building_density = 500  # Adjust as needed
+    """Determines the 5G configuration based on speed, density, and building data, using only 24 GHz, 3.5 GHz, and 700 MHz."""
 
+    # Classify area based on both population and building density
     if population_density >= 50000:
         area_type = "Big Capital"
-        frequency = "1.5 GHz" if building_count > high_building_density else "3.5 GHz"
-        cyclic_prefix = "Normal"
     elif 10000 <= population_density < 50000:
         area_type = "Urban"
-        frequency = "500 MHz" if building_count > high_building_density else "700 MHz"
-        cyclic_prefix = "Extended"
     else:
         area_type = "Rural/Mountain"
-        frequency = "700 MHz" if building_count > high_building_density else "500 MHz"
-        cyclic_prefix = "Extended"
 
-    if avg_floors > 3:
-        subcarrier = "15 kHz" if population_density >= 50000 else "30 kHz"
+    # Assign frequency based on area type and building count
+    if area_type == "Big Capital":
+        frequency = "24 GHz" if building_count < 10000 else "3.5 GHz"  # mmWave only if buildings are low
+    elif area_type == "Urban":
+        frequency = "3.5 GHz"  # Mid-band for urban areas
+    else:
+        frequency = "700 MHz"  # Low-band for rural areas
+
+    # Cyclic prefix assignment
+    cyclic_prefix = "Normal" if area_type in ["Big Capital", "Urban"] else "Extended"
+
+    # Adjust subcarrier spacing based on floors and speed
+    if avg_floors >= 5:
+        subcarrier = "15 kHz"  # High buildings need better penetration
+    elif avg_floors >= 3:
+        subcarrier = "30 kHz"
     else:
         subcarrier = "120 kHz" if avg_speed > 70 else "60 kHz" if avg_speed > 50 else "30 kHz"
 
@@ -68,6 +75,8 @@ def determine_5g_config(avg_speed, population_density, avg_floors, building_coun
         "cyclic_prefix": cyclic_prefix,
         "area_type": area_type
     }
+
+
 
 @app.route("/")
 def home():
