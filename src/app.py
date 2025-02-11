@@ -1,7 +1,7 @@
 ﻿from flask import Flask, request, jsonify, render_template
 import requests
 import json
-import osm2geojson  # Imported, but not used in this snippet
+import osm2geojson  
 import os
 import math
 
