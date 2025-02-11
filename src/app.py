@@ -4,7 +4,7 @@ import json
 import osm2geojson
 import os
 
-app = Flask(__name__, template_folder="../templates")  # Ensure Flask looks in the correct folder
+app = Flask(__name__, template_folder="../templates")  # Look for HTML templates in the ../templates folder
 
 def fetch_osm_data(query):
     overpass_url = "http://overpass-api.de/api/interpreter"
@@ -15,7 +15,7 @@ def get_speed_limit(value):
     try:
         return int(value)
     except ValueError:
-        return 50  # Default speed if conversion fails (e.g., 'walk')
+        return 50  # Default speed if conversion fails
 
 def determine_5g_config(avg_speed, population_density):
     if avg_speed > 70:
@@ -38,15 +38,14 @@ def get_5g_config():
     
     if not lat or not lon:
         return jsonify({"error": "Missing lat/lon"}), 400
-    
-    # Fetch OSM road data
+
+    # Query for road (network) data in a 5km radius
     road_query = f"""
     [out:json];
     way(around:5000,{lat},{lon})["highway"];
     out body;
     """
     road_data = fetch_osm_data(road_query)
-    
     if road_data and "elements" in road_data:
         speed_values = [
             get_speed_limit(way["tags"].get("maxspeed", "50"))
@@ -54,15 +53,38 @@ def get_5g_config():
             if "tags" in way and "maxspeed" in way["tags"]
         ]
         avg_speed = sum(speed_values) / len(speed_values) if speed_values else 50
+        road_count = len(road_data["elements"])
     else:
-        avg_speed = 50  # Default if no road data found
-    
-    # Mocked Population Density API (replace with real API)
+        avg_speed = 50
+        road_count = 0
+
+    # Query for building data in a 5km radius
+    building_query = f"""
+    [out:json];
+    way(around:5000,{lat},{lon})["building"];
+    out body;
+    """
+    building_data = fetch_osm_data(building_query)
+    if building_data and "elements" in building_data:
+        building_count = len(building_data["elements"])
+    else:
+        building_count = 0
+
+    # Mocked population density (for now, you can replace this with a real API)
     population_density = 3000
-    
+
     config = determine_5g_config(avg_speed, population_density)
-    
-    return jsonify({"lat": lat, "lon": lon, "avg_speed": avg_speed, "config": config})
+
+    # Return all gathered data
+    return jsonify({
+        "lat": lat,
+        "lon": lon,
+        "avg_speed": avg_speed,
+        "config": config,
+        "road_count": road_count,
+        "building_count": building_count,
+        "radius": 5000  # radius in meters used for the query
+    })
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
