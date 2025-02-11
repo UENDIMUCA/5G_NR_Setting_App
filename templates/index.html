@@ -1,69 +1,78 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>5G NR Configuration Map</title>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
-  <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
-  <style>
-    #map { height: 500px; }
-    #result { margin-top: 10px; padding: 10px; background: #f4f4f4; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>5G NR Configuration Map</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <style>
+        #map {
+            height: 500px;
+        }
+
+        #result {
+            margin-top: 10px;
+            padding: 10px;
+            background: #f4f4f4;
+        }
+    </style>
 </head>
 <body>
-  <h2>5G NR Setting Application</h2>
-  <p>Click on the map to get 5G NR recommendations. A circle will be drawn indicating the queried area (5km radius).</p>
-  <div id="map"></div>
-  <div id="result"></div>
+    <h2>5G NR Setting Application</h2>
+    <p>Click on the map to get 5G NR recommendations. A circle (5km radius) will be drawn at your click, and details will be displayed.</p>
+    <div id="map"></div>
+    <div id="result"></div>
 
-  <script>
-    var map = L.map('map').setView([48.8566, 2.3522], 12);  // Default view: Paris
+    <script>
+        var map = L.map('map').setView([48.8566, 2.3522], 12);  // Default center: Paris
 
-    // Add OpenStreetMap tile layer
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; OpenStreetMap contributors'
-    }).addTo(map);
+        // Add the OpenStreetMap tile layer.
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
 
-    var circleLayer; // Variable to store the drawn circle
+        var circleLayer; // To store the drawn circle
 
-    // Function to fetch 5G config and additional data from the server
-    function get5GConfig(lat, lon) {
-      fetch(`/api/5g_config?lat=${lat}&lon=${lon}`)
-        .then(response => response.json())
-        .then(data => {
-          // Remove previous circle if it exists
-          if (circleLayer) {
-            map.removeLayer(circleLayer);
-          }
-          // Draw a circle with a 5km radius at the clicked location
-          circleLayer = L.circle([lat, lon], {
-            radius: data.radius,
-            color: 'blue',
-            fillOpacity: 0.2
-          }).addTo(map);
+        // Function to fetch and display the 5G configuration and related data.
+        function get5GConfig(lat, lon) {
+            fetch(`/api/5g_config?lat=${lat}&lon=${lon}`)
+                .then(response => response.json())
+                .then(data => {
+                    // Remove the previous circle if it exists.
+                    if (circleLayer) {
+                        map.removeLayer(circleLayer);
+                    }
+                    // Draw a circle with a 5km radius around the clicked point.
+                    circleLayer = L.circle([lat, lon], {
+                        radius: data.radius,
+                        color: 'blue',
+                        fillOpacity: 0.2
+                    }).addTo(map);
 
-          // Update the result div with returned data (markdown-like formatting)
-          document.getElementById('result').innerHTML = `
-            <h3>5G NR Configuration</h3>
-            <p><b>Latitude:</b> ${data.lat}</p>
-            <p><b>Longitude:</b> ${data.lon}</p>
-            <p><b>Road Count:</b> ${data.road_count}</p>
-            <p><b>Building Count:</b> ${data.building_count}</p>
-            <p><b>Average Road Speed:</b> ${data.avg_speed} km/h</p>
-            <p><b>Subcarrier Spacing:</b> ${data.config.subcarrier}</p>
-            <p><b>Frequency Band:</b> ${data.config.band}</p>
-            <p><b>Cyclic Prefix Mode:</b> ${data.config.cyclic_prefix}</p>
-          `;
+                    // Display the returned information in the result div.
+                    document.getElementById('result').innerHTML = `
+                <h3>5G NR Configuration</h3>
+                <p><b>Location:</b> (${data.lat}, ${data.lon})</p>
+                <p><b>Road Count:</b> ${data.road_count}</p>
+                <p><b>Building Count:</b> ${data.building_count}</p>
+                <p><b>Average Building Floors:</b> ${data.avg_floors}</p>
+                <p><b>Average Road Speed:</b> ${data.avg_speed} km/h</p>
+                <p><b>Population Density:</b> ${data.population_density}</p>
+                <p><b>Area Type:</b> ${data.config.area_type}</p>
+                <p><b>Subcarrier Spacing:</b> ${data.config.subcarrier}</p>
+                <p><b>Frequency:</b> ${data.config.frequency}</p>
+                <p><b>Cyclic Prefix Mode:</b> ${data.config.cyclic_prefix}</p>
+              `;
+                });
+        }
+
+        // When the user clicks on the map, call get5GConfig with the clicked coordinates.
+        map.on('click', function (e) {
+            var lat = e.latlng.lat;
+            var lon = e.latlng.lng;
+            get5GConfig(lat, lon);
         });
-    }
-
-    // When the map is clicked, get the lat/lon and call get5GConfig
-    map.on('click', function(e) {
-      var lat = e.latlng.lat;
-      var lon = e.latlng.lng;
-      get5GConfig(lat, lon);
-    });
-  </script>
+    </script>
 </body>
 </html>
