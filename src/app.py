@@ -56,13 +56,13 @@ def determine_5g_config(avg_speed, population_density, avg_floors, building_coun
     elif area_type == "Urban":
         # In urban areas, choose frequency based on building count and average building floors.
         if 1000 < building_count <= 10000:
-            if avg_floors > 5:
-                frequency = "3.5 GHz"  # Dense urban core with high-rise buildings
+            if  avg_floors <= 7:
+                frequency = "3.5 GHz"
             else:
                 frequency = "700 MHz"  # Dense urban core but with lower-rise buildings
         elif building_count > 500:
             # check the average floors to adjust the frequency.
-            if avg_floors > 5:
+            if  avg_floors <= 7:
                 frequency = "3.5 GHz"
             else:
                 frequency = "700 MHz"
