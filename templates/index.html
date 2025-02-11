@@ -1,26 +1,72 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>5G NR Configuration Map</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
     <style>
-        #map {
-            height: 500px;
+        /* Global Text Styles */
+        body {
+            font-family: Arial, sans-serif;
+            color: #333;
+            margin: 20px;
+            line-height: 1.6;
         }
 
-        #result {
-            margin-top: 10px;
+        h2 {
+            color: #2C3E50;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        h3 {
+            color: #34495E;
+            margin-bottom: 10px;
+            border-bottom: 2px solid #ccc;
+            padding-bottom: 5px;
+        }
+
+        p {
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+
+        /* Note Box Styles */
+        .note {
+            margin: 10px 0;
             padding: 10px;
-            background: #f4f4f4;
+            background: #ffffcc; /* Light yellow background */
+            border-left: 4px solid #ffeb3b;
+            font-style: italic;
+        }
+
+        /* Map Styles */
+        #map {
+            height: 500px;
+            /* Framing the map */
+            border: 3px solid #333;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Specialized Configuration Box */
+        .config-box {
+            background: #e3f2fd; /* Light blue background */
+            border: 1px solid #90caf9;
+            border-radius: 5px;
+            padding: 15px;
+            margin-top: 10px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
         }
     </style>
 </head>
 <body>
     <h2>5G NR Setting Application</h2>
-    <p>Click on the map to get 5G NR recommendations. A circle (5km radius) will be drawn at your click, and details will be displayed.</p>
+    <div class="note">
+        Click on the map to get 5G NR recommendations. A circle (5km radius) will be drawn at your click, and details will be displayed.
+    </div>
     <div id="map"></div>
     <div id="result"></div>
 
@@ -50,19 +96,21 @@
                         fillOpacity: 0.2
                     }).addTo(map);
 
-                    // Display the returned information in the result div.
+                    // Display the returned information inside a specialized configuration box.
                     document.getElementById('result').innerHTML = `
-                <h3>5G NR Configuration</h3>
-                <p><b>Location:</b> (${data.lat}, ${data.lon})</p>
-                <p><b>Road Count:</b> ${data.road_count}</p>
-                <p><b>Building Count:</b> ${data.building_count}</p>
-                <p><b>Average Building Floors:</b> ${data.avg_floors}</p>
-                <p><b>Average Road Speed:</b> ${data.avg_speed} km/h</p>
-                <p><b>Population Density:</b> ${data.population_density}</p>
-                <p><b>Area Type:</b> ${data.config.area_type}</p>
-                <p><b>Subcarrier Spacing:</b> ${data.config.subcarrier}</p>
-                <p><b>Frequency:</b> ${data.config.frequency}</p>
-                <p><b>Cyclic Prefix Mode:</b> ${data.config.cyclic_prefix}</p>
+                <div class="config-box">
+                  <h3>5G NR Configuration</h3>
+                  <p><b>Location:</b> (${data.lat}, ${data.lon})</p>
+                  <p><b>Road Count:</b> ${data.road_count}</p>
+                  <p><b>Building Count:</b> ${data.building_count}</p>
+                  <p><b>Average Building Floors:</b> ${data.avg_floors}</p>
+                  <p><b>Average Road Speed:</b> ${data.avg_speed} km/h</p>
+                  <p><b>Population Density:</b> ${data.population_density}</p>
+                  <p><b>Area Type:</b> ${data.config.area_type}</p>
+                  <p><b>Subcarrier Spacing:</b> ${data.config.subcarrier}</p>
+                  <p><b>Frequency:</b> ${data.config.frequency}</p>
+                  <p><b>Cyclic Prefix Mode:</b> ${data.config.cyclic_prefix}</p>
+                </div>
               `;
                 });
         }
