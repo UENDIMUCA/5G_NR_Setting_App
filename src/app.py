@@ -1,7 +1,7 @@
 ﻿from flask import Flask, request, jsonify, render_template
 import requests
 import json
-import osm2geojson  # Imported, but not used in this snippet
+import osm2geojson  
 import os
 import math
 
@@ -52,22 +52,44 @@ def determine_5g_config(avg_speed, population_density, avg_floors, building_coun
 
     # Assign frequency based on area type and building count
     if area_type == "Big Capital":
-        frequency = "24 GHz" if building_count < 10000 else "3.5 GHz"  # mmWave only if buildings are low
+        frequency = "24 GHz" if building_count < 10000 else "3.5 GHz"  # High-band only if buildings are low in number
     elif area_type == "Urban":
-        frequency = "3.5 GHz"  # Mid-band for urban areas
-    else:
-        frequency = "700 MHz"  # Low-band for rural areas
+        # In urban areas, choose frequency based on building count and average building floors.
+        if 1000 < building_count <= 10000:
+            if avg_floors > 5:
+                frequency = "3.5 GHz"  # Dense urban core with high-rise buildings
+            else:
+                frequency = "700 MHz"  # Dense urban core but with lower-rise buildings
+        elif building_count > 500:
+            # check the average floors to adjust the frequency.
+            if avg_floors > 5:
+                frequency = "3.5 GHz"
+            else:
+                frequency = "700 MHz"
+        else:
+            frequency = "24 GHz"   # Less dense urban areas
+    elif area_type == "Rural/Mountain":
+        # In rural areas, decide based on the presence of clustered buildings.
+        if building_count > 50:
+            # Adjust frequency based on average speed,
+            # which might indicate vehicular density or road conditions.
+            if avg_speed < 50:
+                frequency = "3.5 GHz"  # When speeds are lower, a higher frequency might be acceptable
+            else:
+                frequency = "700 MHz"  # For higher speeds, extended coverage with 700 MHz is preferred
+        else:
+            frequency = "700 MHz"  # Very sparse rural regions for extended coverage
 
     # Cyclic prefix assignment
     cyclic_prefix = "Normal" if area_type in ["Big Capital", "Urban"] else "Extended"
 
-    # Adjust subcarrier spacing based on floors and speed
-    if avg_floors >= 5:
-        subcarrier = "15 kHz"  # High buildings need better penetration
-    elif avg_floors >= 3:
+    # Adjust subcarrier spacing based on area type
+    if avg_speed < 50:
+        subcarrier = "15 kHz"
+    elif 50 < avg_speed > 70:
         subcarrier = "30 kHz"
-    else:
-        subcarrier = "120 kHz" if avg_speed > 70 else "60 kHz" if avg_speed > 50 else "30 kHz"
+    elif avg_speed > 70:
+        subcarrier = "120 kHz"
 
     return {
         "subcarrier": subcarrier,
@@ -75,6 +97,9 @@ def determine_5g_config(avg_speed, population_density, avg_floors, building_coun
         "cyclic_prefix": cyclic_prefix,
         "area_type": area_type
     }
+
+
+
 
 
 
